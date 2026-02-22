@@ -1,0 +1,42 @@
+docker-compose-yaml: docker-compose.yml
+
+tasks:
+  pre-rollout:
+    - run:
+        name: drush status
+        # A simple example of pre-rollout-task
+        command: drush status || echo "Drush Status did not complete successfully"
+        service: cli
+
+  post-rollout:
+     - run:
+        name: IF no Drupal installed and we are not main branch, sync from main branch
+        command: |
+          if tables=$(drush sqlq 'show tables;') && [ -z "$tables" ] && [[ "$LAGOON_GIT_BRANCH" != "main" ]]; then
+              /app/lagoon/stage-site.sh
+              drush -y cr
+          fi
+        service: cli
+        shell: bash
+     - run:
+        name: drush updb
+        # This will only run if the database exists.
+        command: |
+          if [[ $(drush status --field=Database) == "Connected" ]]; then drush -y updb; fi
+        service: cli
+        shell: bash
+     - run:
+         name: drush cr
+         # This will only run if the database exists.
+         command: |
+           if [[ $(drush status --field=Database) == "Connected" ]]; then drush -y cr; fi
+         service: cli
+         shell: bash
+
+environments:
+  main:
+    cronjobs:
+      - name: drush hourly cron
+        schedule: "M * * * *"
+        command: drush cron
+        service: cli

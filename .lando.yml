@@ -1,0 +1,6 @@
+name: aiosales-delicious-drupal
+recipe: lagoon
+config:
+  flavor: drupal
+  build:
+    - composer install
