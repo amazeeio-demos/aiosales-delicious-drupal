@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage: $0 <new-string>"
+    exit 1
+fi
+
+TARGET="aiosales-delicious-drupal"
+REPLACEMENT="$1"
+
+# Find files containing the target string
+# -r: recursive
+# -l: print file names only
+# -Z: null character after file name (for safe handling of spaces)
+# --exclude-dir: skip vendor and .git directories
+# --exclude: skip this script itself to prevent self-modification
+grep -rZl "$TARGET" . --exclude-dir={vendor,.git} --exclude=".aio-demo-cloner" | xargs -0 sed -i "s|$TARGET|$REPLACEMENT|g"
+
+echo "Replaced '$TARGET' with '$REPLACEMENT' in tracked files."
